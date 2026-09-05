@@ -13,7 +13,6 @@ from datetime import datetime
 from sqlalchemy import (
     Column, String, Float, Integer, Boolean, DateTime, ForeignKey, Enum, Date
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -42,7 +41,7 @@ class SubscriptionStatus(str, enum.Enum):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    id = Column(String(), primary_key=True, default=gen_uuid)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
@@ -59,11 +58,11 @@ class User(Base):
 class Category(Base):
     __tablename__ = "categories"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    id = Column(String(), primary_key=True, default=gen_uuid)
     name = Column(String, nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
     # null user_id = a default/global category available to everyone
-    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=True)
+    user_id = Column(String(), ForeignKey("users.id"), nullable=True)
 
     transactions = relationship("Transaction", back_populates="category")
     budgets = relationship("Budget", back_populates="category")
@@ -72,11 +71,11 @@ class Category(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False)
+    id = Column(String(), primary_key=True, default=gen_uuid)
+    user_id = Column(String(), ForeignKey("users.id"), nullable=False)
     type = Column(Enum(TransactionType), nullable=False)
     amount = Column(Float, nullable=False)
-    category_id = Column(UUID(as_uuid=False), ForeignKey("categories.id"), nullable=True)
+    category_id = Column(String(), ForeignKey("categories.id"), nullable=True)
     description = Column(String, nullable=True)
     date = Column(Date, nullable=False)
     payment_method = Column(String, nullable=True)
@@ -89,9 +88,9 @@ class Transaction(Base):
 class Budget(Base):
     __tablename__ = "budgets"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False)
-    category_id = Column(UUID(as_uuid=False), ForeignKey("categories.id"), nullable=False)
+    id = Column(String(), primary_key=True, default=gen_uuid)
+    user_id = Column(String(), ForeignKey("users.id"), nullable=False)
+    category_id = Column(String(), ForeignKey("categories.id"), nullable=False)
     amount = Column(Float, nullable=False)
     month = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
@@ -104,8 +103,8 @@ class Budget(Base):
 class Subscription(Base):
     __tablename__ = "subscriptions"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False)
+    id = Column(String(), primary_key=True, default=gen_uuid)
+    user_id = Column(String(), ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
     frequency = Column(Enum(SubscriptionFrequency), nullable=False)
@@ -119,8 +118,8 @@ class Subscription(Base):
 class Bill(Base):
     __tablename__ = "bills"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False)
+    id = Column(String(), primary_key=True, default=gen_uuid)
+    user_id = Column(String(), ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     total_amount = Column(Float, nullable=False)
     date = Column(Date, nullable=False)
@@ -133,8 +132,8 @@ class Bill(Base):
 class BillParticipant(Base):
     __tablename__ = "bill_participants"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    bill_id = Column(UUID(as_uuid=False), ForeignKey("bills.id"), nullable=False)
+    id = Column(String(), primary_key=True, default=gen_uuid)
+    bill_id = Column(String(), ForeignKey("bills.id"), nullable=False)
     name = Column(String, nullable=False)
     share_amount = Column(Float, nullable=False)
     paid = Column(Boolean, default=False)
@@ -145,8 +144,8 @@ class BillParticipant(Base):
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
-    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False)
+    id = Column(String(), primary_key=True, default=gen_uuid)
+    user_id = Column(String(), ForeignKey("users.id"), nullable=False)
     message = Column(String, nullable=False)
     type = Column(String, nullable=False)  # budget_warning, budget_exceeded, subscription_reminder, spending_warning
     is_read = Column(Boolean, default=False)
