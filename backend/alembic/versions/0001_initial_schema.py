@@ -23,12 +23,14 @@ down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-transaction_type_enum = postgresql.ENUM("income", "expense", name="transactiontype")
+transaction_type_enum = postgresql.ENUM(
+    "income", "expense", name="transactiontype", create_type=False
+)
 subscription_frequency_enum = postgresql.ENUM(
-    "monthly", "yearly", "weekly", name="subscriptionfrequency"
+    "monthly", "yearly", "weekly", name="subscriptionfrequency", create_type=False
 )
 subscription_status_enum = postgresql.ENUM(
-    "active", "cancelled", name="subscriptionstatus"
+    "active", "cancelled", name="subscriptionstatus", create_type=False
 )
 
 
