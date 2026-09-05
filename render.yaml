@@ -16,7 +16,6 @@ services:
     dockerContext: ./backend
     plan: free
     region: oregon
-    preDeployCommand: alembic upgrade head
     envVars:
       - key: DATABASE_URL
         fromDatabase:

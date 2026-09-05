@@ -1,5 +1,7 @@
 # Production image for the FinPilot API.
-# Render (or any container host) builds this, runs migrations, then starts uvicorn.
+# Migrations run at container startup via start.sh (Render's free tier
+# doesn't support a separate pre-deploy step, so this runs them right
+# before uvicorn starts instead — safe to run on every restart).
 FROM python:3.12-slim
 
 WORKDIR /app
@@ -13,10 +15,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+RUN chmod +x start.sh
 
 EXPOSE 8000
 
-# Render's "Pre-Deploy Command" should run `alembic upgrade head` before
-# this starts (see render.yaml). Locally with plain `docker run`, run the
-# migration manually first: `docker run <image> alembic upgrade head`.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["./start.sh"]
