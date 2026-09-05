@@ -1,0 +1,22 @@
+# Environment files (never commit real secrets)
+.env
+backend/.env
+frontend/.env
+
+# Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Docker volumes are managed by docker-compose, nothing local to ignore here

@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: finpilot_user
+          POSTGRES_PASSWORD: finpilot_pass
+          POSTGRES_DB: finpilot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: postgresql://finpilot_user:finpilot_pass@localhost:5432/finpilot
+      SECRET_KEY: ci-test-secret-key
+      FRONTEND_ORIGIN: http://localhost:5173
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for syntax errors
+        run: python -m py_compile app/*.py app/routers/*.py app/crud/*.py
+
+      - name: Apply migrations against a real Postgres
+        run: alembic upgrade head
+
+      - name: Verify the app imports cleanly (catches wiring/router errors)
+        run: python -c "from app.main import app; print('FastAPI app loaded OK, routes:', len(app.routes))"
+
+      # Add `pytest` here once a test suite exists:
+      # - name: Run tests
+      #   run: pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
