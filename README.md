@@ -306,17 +306,27 @@ Frontend runs at `http://localhost:5173`.
 
 ### Deploying it for real
 
-**Backend + database (Render):**
+**Database (Neon — not Render):** Render's free Postgres plan auto-deletes
+after 30 days, so this app uses an external, permanently-free Postgres
+instead.
+1. Sign up at [neon.tech](https://neon.tech) (free, no card required).
+2. Create a project — Neon gives you a connection string immediately, e.g.
+   `postgresql://user:pass@ep-xxx.neon.tech/dbname?sslmode=require`.
+3. Keep that connection string handy for the next step.
+
+**Backend (Render):**
 1. Push this repo to GitHub.
 2. In Render, choose **New → Blueprint** and point it at the repo — it
-   reads `render.yaml` and provisions the API service and a managed
-   Postgres database together.
-3. `SECRET_KEY` is auto-generated and `DATABASE_URL` is auto-wired from the
-   database. After the frontend is deployed (next step), set
-   `FRONTEND_ORIGIN` on the Render service to your Vercel URL so CORS
-   allows it.
-4. Render runs `alembic upgrade head` as the pre-deploy command automatically
-   — no manual migration step needed on deploy.
+   reads `render.yaml` and provisions the `finpilot-api` web service (no
+   database this time, since that's external now).
+3. `SECRET_KEY` is auto-generated. Go to the service's **Environment** tab
+   and manually set:
+   - `DATABASE_URL` → your Neon connection string from above
+   - `FRONTEND_ORIGIN` → your Vercel URL once deployed (next step)
+4. Migrations run automatically at container startup via `backend/start.sh`
+   (Render's free tier doesn't support a separate pre-deploy command, so
+   this runs `alembic upgrade head` immediately before `uvicorn` starts,
+   every time the container boots — safe to repeat).
 
 **Frontend (Vercel):**
 1. Import the repo in Vercel, set the project root to `frontend/`.
@@ -325,6 +335,20 @@ Frontend runs at `http://localhost:5173`.
    `https://finpilot-api.onrender.com`).
 3. Deploy. `vercel.json`'s rewrite rule keeps client-side routes like
    `/dashboard` working on refresh instead of 404ing.
+
+**Known issues already fixed in this codebase** (documented here so a
+future migration doesn't reintroduce them):
+- Postgres enum types (`transactiontype`, etc.) are declared with
+  `create_type=False` in the migration's column definitions — without this,
+  creating the 2nd+ table that uses the same enum fails with
+  `DuplicateObject: type already exists`.
+- `bcrypt` is pinned to `4.0.1` in `requirements.txt` — newer bcrypt
+  releases removed an attribute `passlib 1.7.4` depends on, crashing every
+  password hash with a 500 error.
+- Every `id`/foreign-key column in `models.py` uses plain `String`, not
+  `postgresql.UUID` — the Alembic migration creates them as `VARCHAR`, and
+  a mismatched Python-side type causes `operator does not exist: character
+  varying = uuid` on every lookup.
 
 ## What's not built (intentionally, per the spec)
 
